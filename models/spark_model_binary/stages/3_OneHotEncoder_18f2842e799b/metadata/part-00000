@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.OneHotEncoderModel","timestamp":1791180694264,"sparkVersion":"3.5.9","uid":"OneHotEncoder_18f2842e799b","paramMap":{"inputCols":["agency_idx","complaint_idx","borough_idx"],"outputCols":["agency_vec","complaint_vec","borough_vec"]},"defaultParamMap":{"outputCol":"OneHotEncoder_18f2842e799b__output","dropLast":true,"handleInvalid":"error"}}

@@ -1,0 +1,61 @@
+Folder PATH listing for volume Windows
+Volume serial number is 749E-50E7
+C:.
+¦   .gitignore
+¦   project_structure.txt
+¦   README.md
+¦   
++---dashboard
+¦   +---data
+¦       +---agency_performance
+¦       ¦       000000_0
+¦       ¦       
+¦       +---borough_performance
+¦       ¦       000000_0
+¦       ¦       
+¦       +---complaint_resolution
+¦       ¦       000000_0
+¦       ¦       
+¦       +---hourly_requests
+¦       ¦       000000_0
+¦       ¦       
+¦       +---monthly_requests
+¦       ¦       000000_0
+¦       ¦       
+¦       +---resolution_distribution
+¦       ¦       000000_0
+¦       ¦       
+¦       +---resolution_stats
+¦       ¦       000000_0
+¦       ¦       
+¦       +---top_complaints
+¦       ¦       000000_0
+¦       ¦       
+¦       +---yearly_requests
+¦       ¦       000000_0
+¦       ¦       
+¦       +---yearly_resolution
+¦               000000_0
+¦               
++---data
+¦   +---sample
+¦           nyc311_sample.csv
+¦           nyc311_sample.json
+¦           nyc311_sample_local.csv
+¦           
++---docs
+¦       pipeline.md
+¦       schema.md
+¦       
++---hive
+¦       add_partitions.hql
+¦       analytics.hql
+¦       create_dashboard_data.hql
+¦       create_tables.hql
+¦       
++---output
+¦       .gitkeep
+¦       
++---pig
+        clean_311_final.pig
+        

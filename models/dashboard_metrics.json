@@ -1,0 +1,665 @@
+{
+  "kpis": {
+    "total_requests": 20627368,
+    "median_hours": 7.63,
+    "p75_hours": 79.38,
+    "fast_pct": 58.9,
+    "moderate_pct": 14.13,
+    "slow_pct": 26.97
+  },
+  "model_eval": {
+    "person_a_roc_auc": 0.9161,
+    "person_b_weighted_f1": 0.7766
+  },
+  "equity": [
+    {
+      "borough": "BROOKLYN",
+      "agency": "EDC",
+      "volume": 11245,
+      "breach_pct": 99.56,
+      "avg_hours": 997.81
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "EDC",
+      "volume": 21298,
+      "breach_pct": 99.48,
+      "avg_hours": 1299.01
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "OOS",
+      "volume": 1186,
+      "breach_pct": 99.16,
+      "avg_hours": 1281.11
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "EDC",
+      "volume": 51520,
+      "breach_pct": 96.79,
+      "avg_hours": 1118.18
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "TLC",
+      "volume": 19084,
+      "breach_pct": 92.85,
+      "avg_hours": 1486.61
+    },
+    {
+      "borough": "BRONX",
+      "agency": "TLC",
+      "volume": 4053,
+      "breach_pct": 91.24,
+      "avg_hours": 1566.82
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DPR",
+      "volume": 172556,
+      "breach_pct": 75.05,
+      "avg_hours": 770.6
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DOB",
+      "volume": 22875,
+      "breach_pct": 75.03,
+      "avg_hours": 809.39
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DOB",
+      "volume": 128365,
+      "breach_pct": 74.61,
+      "avg_hours": 914.65
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DOB",
+      "volume": 90927,
+      "breach_pct": 73.57,
+      "avg_hours": 669.2
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "TLC",
+      "volume": 24959,
+      "breach_pct": 72.88,
+      "avg_hours": 1251.38
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "TLC",
+      "volume": 92476,
+      "breach_pct": 71.58,
+      "avg_hours": 1122.69
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "HPD",
+      "volume": 77389,
+      "breach_pct": 70.51,
+      "avg_hours": 379.34
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DOB",
+      "volume": 175052,
+      "breach_pct": 66.74,
+      "avg_hours": 689.24
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DPR",
+      "volume": 63963,
+      "breach_pct": 63.49,
+      "avg_hours": 600.78
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DOE",
+      "volume": 2240,
+      "breach_pct": 63.44,
+      "avg_hours": 812.09
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "HPD",
+      "volume": 1272006,
+      "breach_pct": 63.36,
+      "avg_hours": 332.95
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DPR",
+      "volume": 168528,
+      "breach_pct": 61.9,
+      "avg_hours": 690.65
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DOB",
+      "volume": 101020,
+      "breach_pct": 61.58,
+      "avg_hours": 497.64
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "HPD",
+      "volume": 930446,
+      "breach_pct": 61.04,
+      "avg_hours": 372.47
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DOE",
+      "volume": 1354,
+      "breach_pct": 60.86,
+      "avg_hours": 676.73
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DOE",
+      "volume": 1489,
+      "breach_pct": 58.09,
+      "avg_hours": 500.62
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "HPD",
+      "volume": 557396,
+      "breach_pct": 58.02,
+      "avg_hours": 318.53
+    },
+    {
+      "borough": "BRONX",
+      "agency": "HPD",
+      "volume": 1527504,
+      "breach_pct": 57.07,
+      "avg_hours": 328.65
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DOHMH",
+      "volume": 47719,
+      "breach_pct": 57.03,
+      "avg_hours": 668.29
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DOE",
+      "volume": 1836,
+      "breach_pct": 55.77,
+      "avg_hours": 658.17
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DOHMH",
+      "volume": 79904,
+      "breach_pct": 54.94,
+      "avg_hours": 540.44
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DPR",
+      "volume": 59497,
+      "breach_pct": 53.12,
+      "avg_hours": 510.97
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DPR",
+      "volume": 76202,
+      "breach_pct": 52.92,
+      "avg_hours": 483.58
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DOT",
+      "volume": 333979,
+      "breach_pct": 51.4,
+      "avg_hours": 262.27
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DOHMH",
+      "volume": 9226,
+      "breach_pct": 51.37,
+      "avg_hours": 478.72
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DOT",
+      "volume": 128692,
+      "breach_pct": 48.6,
+      "avg_hours": 204.15
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DOHMH",
+      "volume": 76608,
+      "breach_pct": 48.35,
+      "avg_hours": 558.62
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DOT",
+      "volume": 340297,
+      "breach_pct": 48.17,
+      "avg_hours": 232.57
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "OSE",
+      "volume": 3840,
+      "breach_pct": 47.45,
+      "avg_hours": 297.45
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DOHMH",
+      "volume": 34630,
+      "breach_pct": 44.43,
+      "avg_hours": 452.94
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DOT",
+      "volume": 85254,
+      "breach_pct": 43.98,
+      "avg_hours": 193.45
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "OSE",
+      "volume": 17796,
+      "breach_pct": 42.9,
+      "avg_hours": 278.15
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DOT",
+      "volume": 197647,
+      "breach_pct": 42.58,
+      "avg_hours": 209.1
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DSNY",
+      "volume": 852647,
+      "breach_pct": 42.01,
+      "avg_hours": 131.42
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DSNY",
+      "volume": 687469,
+      "breach_pct": 40.66,
+      "avg_hours": 98.32
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "OSE",
+      "volume": 21390,
+      "breach_pct": 38.99,
+      "avg_hours": 251.76
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DSNY",
+      "volume": 236544,
+      "breach_pct": 36.67,
+      "avg_hours": 89.01
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DCWP",
+      "volume": 33323,
+      "breach_pct": 36.66,
+      "avg_hours": 261.35
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DCWP",
+      "volume": 28225,
+      "breach_pct": 35.55,
+      "avg_hours": 260.18
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DCWP",
+      "volume": 3515,
+      "breach_pct": 35.16,
+      "avg_hours": 243.79
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DSNY",
+      "volume": 359387,
+      "breach_pct": 35.09,
+      "avg_hours": 127.89
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DCWP",
+      "volume": 18911,
+      "breach_pct": 34.2,
+      "avg_hours": 251.19
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DCWP",
+      "volume": 35110,
+      "breach_pct": 33.68,
+      "avg_hours": 215.61
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DEP",
+      "volume": 238255,
+      "breach_pct": 32.91,
+      "avg_hours": 91.49
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DSNY",
+      "volume": 280733,
+      "breach_pct": 32.57,
+      "avg_hours": 97.77
+    },
+    {
+      "borough": "BRONX",
+      "agency": "OSE",
+      "volume": 6759,
+      "breach_pct": 31.69,
+      "avg_hours": 237.42
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DEP",
+      "volume": 317073,
+      "breach_pct": 29.2,
+      "avg_hours": 95.6
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DEP",
+      "volume": 143906,
+      "breach_pct": 28.98,
+      "avg_hours": 99.33
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "OSE",
+      "volume": 20047,
+      "breach_pct": 28.08,
+      "avg_hours": 207.36
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DCA",
+      "volume": 5544,
+      "breach_pct": 25.69,
+      "avg_hours": 268.46
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DEP",
+      "volume": 305414,
+      "breach_pct": 25.2,
+      "avg_hours": 97.5
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DCA",
+      "volume": 6289,
+      "breach_pct": 24.57,
+      "avg_hours": 251.91
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DCA",
+      "volume": 7460,
+      "breach_pct": 22.56,
+      "avg_hours": 203.33
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DCA",
+      "volume": 5204,
+      "breach_pct": 20.7,
+      "avg_hours": 195.54
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DEP",
+      "volume": 79259,
+      "breach_pct": 20.35,
+      "avg_hours": 71.11
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "DHS",
+      "volume": 153256,
+      "breach_pct": 15.26,
+      "avg_hours": 69.75
+    },
+    {
+      "borough": "BRONX",
+      "agency": "DHS",
+      "volume": 11366,
+      "breach_pct": 12.93,
+      "avg_hours": 63.58
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "DHS",
+      "volume": 41297,
+      "breach_pct": 12.25,
+      "avg_hours": 61.67
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "DHS",
+      "volume": 28173,
+      "breach_pct": 11.72,
+      "avg_hours": 46.23
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "DHS",
+      "volume": 1741,
+      "breach_pct": 2.64,
+      "avg_hours": 19.14
+    },
+    {
+      "borough": "BRONX",
+      "agency": "NYPD",
+      "volume": 2184861,
+      "breach_pct": 1.37,
+      "avg_hours": 8.09
+    },
+    {
+      "borough": "BROOKLYN",
+      "agency": "NYPD",
+      "volume": 2903186,
+      "breach_pct": 0.07,
+      "avg_hours": 2.09
+    },
+    {
+      "borough": "QUEENS",
+      "agency": "NYPD",
+      "volume": 2568647,
+      "breach_pct": 0.05,
+      "avg_hours": 2.56
+    },
+    {
+      "borough": "MANHATTAN",
+      "agency": "NYPD",
+      "volume": 1751631,
+      "breach_pct": 0.02,
+      "avg_hours": 1.24
+    },
+    {
+      "borough": "STATEN ISLAND",
+      "agency": "NYPD",
+      "volume": 271699,
+      "breach_pct": 0.0,
+      "avg_hours": 1.56
+    }
+  ],
+  "bottlenecks": [
+    {
+      "complaint_type": "Illegal Parking",
+      "volume": 2896913,
+      "avg_hours": 2.59,
+      "breach_rate": 0.06
+    },
+    {
+      "complaint_type": "Noise - Residential",
+      "volume": 2502043,
+      "avg_hours": 6.5,
+      "breach_rate": 1.14
+    },
+    {
+      "complaint_type": "HEAT/HOT WATER",
+      "volume": 1635100,
+      "avg_hours": 49.14,
+      "breach_rate": 21.12
+    },
+    {
+      "complaint_type": "Noise - Street/Sidewalk",
+      "volume": 1140579,
+      "avg_hours": 1.61,
+      "breach_rate": 0.03
+    },
+    {
+      "complaint_type": "Blocked Driveway",
+      "volume": 1074245,
+      "avg_hours": 2.92,
+      "breach_rate": 0.11
+    },
+    {
+      "complaint_type": "UNSANITARY CONDITION",
+      "volume": 689445,
+      "avg_hours": 509.67,
+      "breach_rate": 87.13
+    },
+    {
+      "complaint_type": "Request Large Bulky Item Collection",
+      "volume": 630025,
+      "avg_hours": 89.75,
+      "breach_rate": 48.1
+    },
+    {
+      "complaint_type": "Noise - Vehicle",
+      "volume": 400416,
+      "avg_hours": 1.65,
+      "breach_rate": 0.05
+    },
+    {
+      "complaint_type": "PLUMBING",
+      "volume": 397047,
+      "avg_hours": 473.79,
+      "breach_rate": 77.46
+    },
+    {
+      "complaint_type": "Abandoned Vehicle",
+      "volume": 395963,
+      "avg_hours": 3.82,
+      "breach_rate": 0.24
+    },
+    {
+      "complaint_type": "Noise - Commercial",
+      "volume": 395126,
+      "avg_hours": 1.53,
+      "breach_rate": 0.03
+    },
+    {
+      "complaint_type": "PAINT/PLASTER",
+      "volume": 364818,
+      "avg_hours": 422.36,
+      "breach_rate": 78.3
+    },
+    {
+      "complaint_type": "Street Condition",
+      "volume": 353335,
+      "avg_hours": 114.36,
+      "breach_rate": 37.16
+    },
+    {
+      "complaint_type": "Noise",
+      "volume": 341055,
+      "avg_hours": 102.29,
+      "breach_rate": 43.74
+    },
+    {
+      "complaint_type": "Water System",
+      "volume": 329026,
+      "avg_hours": 106.19,
+      "breach_rate": 22.95
+    },
+    {
+      "complaint_type": "Dirty Condition",
+      "volume": 273344,
+      "avg_hours": 82.81,
+      "breach_rate": 24.69
+    },
+    {
+      "complaint_type": "DOOR/WINDOW",
+      "volume": 270555,
+      "avg_hours": 565.78,
+      "breach_rate": 87.2
+    },
+    {
+      "complaint_type": "Derelict Vehicles",
+      "volume": 261692,
+      "avg_hours": 35.68,
+      "breach_rate": 10.39
+    },
+    {
+      "complaint_type": "WATER LEAK",
+      "volume": 250268,
+      "avg_hours": 556.54,
+      "breach_rate": 85.43
+    },
+    {
+      "complaint_type": "Missed Collection",
+      "volume": 246516,
+      "avg_hours": 138.39,
+      "breach_rate": 56.23
+    },
+    {
+      "complaint_type": "Traffic Signal Condition",
+      "volume": 228076,
+      "avg_hours": 90.62,
+      "breach_rate": 9.38
+    },
+    {
+      "complaint_type": "Encampment",
+      "volume": 223510,
+      "avg_hours": 47.5,
+      "breach_rate": 8.54
+    },
+    {
+      "complaint_type": "Non-Emergency Police Matter",
+      "volume": 200296,
+      "avg_hours": 1.61,
+      "breach_rate": 0.04
+    },
+    {
+      "complaint_type": "General Construction/Plumbing",
+      "volume": 194477,
+      "avg_hours": 555.83,
+      "breach_rate": 58.95
+    },
+    {
+      "complaint_type": "GENERAL",
+      "volume": 186632,
+      "avg_hours": 623.12,
+      "breach_rate": 88.04
+    }
+  ]
+}

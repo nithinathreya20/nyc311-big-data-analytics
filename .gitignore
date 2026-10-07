@@ -84,3 +84,10 @@ output/*
 !data/sample/
 !data/sample/*.csv
 !data/sample/*.json
+
+# =========================
+# Spark CRC Checksums
+# =========================
+*.crc
+.*.crc
+

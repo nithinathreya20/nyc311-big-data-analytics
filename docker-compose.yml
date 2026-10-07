@@ -1,0 +1,52 @@
+services:
+  namenode:
+    image: apache/hadoop:3.4.1
+    hostname: namenode
+    container_name: namenode
+    user: "root"
+    command: ["hdfs", "namenode"]
+    env_file:
+      - ./hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: /opt/hadoop/data/nameNode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - namenode_data:/opt/hadoop/data/nameNode
+
+  datanode:
+    image: apache/hadoop:3.4.1
+    hostname: datanode
+    container_name: datanode
+    user: "root"
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode_data:/opt/hadoop/data/dataNode
+    depends_on:
+      - namenode
+
+  hive-server:
+    image: apache/hive:4.2.1
+    hostname: hive-server
+    container_name: hive-server
+    user: "root"
+    environment:
+      HIVE_SERVER2_THRIFT_PORT: 10000
+      SERVICE_NAME: hiveserver2
+      SCHEMA_TOOL_OPTS: "-initSchema -dbType derby"
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    volumes:
+      - hive_data:/opt/hive/data
+    depends_on:
+      - namenode
+      - datanode
+
+volumes:
+  namenode_data:
+  datanode_data:
+  hive_data:
