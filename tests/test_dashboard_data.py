@@ -37,6 +37,8 @@ from dashboard.components.charts import (
     create_complaint_tier_stacked,
     create_resolution_skew_comparison,
     create_bottlenecks_bubble_chart,
+    create_confusion_matrix_heatmap,
+    create_tier_probability_bar,
 )
 
 
@@ -128,6 +130,17 @@ class TestDashboardData(unittest.TestCase):
         self.assertGreater(len(payload["equity"]), 0)
         self.assertGreater(len(payload["bottlenecks"]), 0)
 
+        # Provenance and reproducibility verification
+        self.assertIn("provenance", payload)
+        self.assertIn("evaluation_timestamp", payload["provenance"])
+        self.assertIn("dataset_version", payload["provenance"])
+        self.assertEqual(payload["provenance"]["train_records"], 825094)
+        self.assertEqual(payload["provenance"]["test_records"], 206274)
+
+        # Test prediction samples verification
+        self.assertIn("test_predictions_sample", payload)
+        self.assertGreater(len(payload["test_predictions_sample"]), 0)
+
     def test_formatting_helpers(self):
         self.assertEqual(format_count(1_234_567), "1,234,567")
         self.assertEqual(format_count(20_631_296, compact=True), "20.63M")
@@ -165,6 +178,14 @@ class TestDashboardData(unittest.TestCase):
         b_df = pd.DataFrame(metrics["bottlenecks"])
         fig_bubble = create_bottlenecks_bubble_chart(b_df)
         self.assertIsNotNone(fig_bubble)
+
+        # New ML chart tests
+        cm_data = metrics.get("model_eval", {}).get("person_a", {}).get("confusion_matrix", {})
+        fig_cm = create_confusion_matrix_heatmap(cm_data)
+        self.assertIsNotNone(fig_cm)
+
+        fig_prob = create_tier_probability_bar({"FAST": 0.85, "MODERATE": 0.10, "SLOW": 0.05})
+        self.assertIsNotNone(fig_prob)
 
 
 if __name__ == "__main__":

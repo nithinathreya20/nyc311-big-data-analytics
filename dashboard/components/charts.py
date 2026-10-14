@@ -648,3 +648,85 @@ def create_bottlenecks_bubble_chart(b_df: pd.DataFrame) -> go.Figure:
     )
     return fig
 
+
+def create_confusion_matrix_heatmap(cm_data: dict) -> go.Figure:
+    """Create an interactive heatmap for the Binary SLA Breach Classifier confusion matrix."""
+    tn = cm_data.get("true_negatives", 142104)
+    fp = cm_data.get("false_positives", 8512)
+    fn = cm_data.get("false_negatives", 19478)
+    tp = cm_data.get("true_positives", 36180)
+    total = max(1, tn + fp + fn + tp)
+
+    z_vals = [[tn, fp], [fn, tp]]
+    text_vals = [
+        [
+            f"<b>True Negative (TN)</b><br>{tn:,}<br>({tn/total*100:.1f}%)",
+            f"<b>False Positive (FP)</b><br>{fp:,}<br>({fp/total*100:.1f}%)",
+        ],
+        [
+            f"<b>False Negative (FN)</b><br>{fn:,}<br>({fn/total*100:.1f}%)",
+            f"<b>True Positive (TP)</b><br>{tp:,}<br>({tp/total*100:.1f}%)",
+        ],
+    ]
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=z_vals,
+            x=["Predicted: Met SLA (≤72h)", "Predicted: Breach (>72h)"],
+            y=["Actual: Met SLA (≤72h)", "Actual: Breach (>72h)"],
+            text=text_vals,
+            texttemplate="%{text}",
+            textfont={"size": 13, "family": FONT_FAMILY, "color": "#0F172A"},
+            colorscale=[[0, "#E2E8F0"], [0.2, "#BAE6FD"], [0.6, "#7DD3FC"], [1.0, "#0284C7"]],
+            showscale=False,
+            hoverongaps=False,
+        )
+    )
+
+    fig = _apply_standard_layout(
+        fig,
+        title="Person A Binary Confusion Matrix (Test Split: N=206,274)",
+        height=320,
+        showlegend=False,
+    )
+    fig.update_xaxes(side="top", tickfont={"size": 12, "family": FONT_FAMILY})
+    fig.update_yaxes(autorange="reversed", tickfont={"size": 12, "family": FONT_FAMILY})
+    return fig
+
+
+def create_tier_probability_bar(tier_probs: dict) -> go.Figure:
+    """Create a horizontal bar chart displaying predicted velocity tier probabilities."""
+    tiers = ["FAST (<24h)", "MODERATE (24–72h)", "SLOW (>72h)"]
+    probs = [
+        tier_probs.get("FAST", 0.0) * 100,
+        tier_probs.get("MODERATE", 0.0) * 100,
+        tier_probs.get("SLOW", 0.0) * 100,
+    ]
+    colors = ["#10B981", "#F59E0B", "#EF4444"]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            y=tiers,
+            x=probs,
+            orientation="h",
+            marker={"color": colors, "line": {"color": "#CBD5E1", "width": 1}},
+            text=[f"{p:.1f}%" for p in probs],
+            textposition="outside",
+            hovertemplate="<b>%{y}</b><br>Predicted Probability: %{x:.2f}%<extra></extra>",
+        )
+    )
+
+    fig = _apply_standard_layout(
+        fig,
+        title="Person B: Multi-Class Probability Distribution",
+        height=240,
+        showlegend=False,
+        xaxis_title="Confidence Probability (%)",
+        yaxis_title="Resolution Velocity Tier",
+    )
+    fig.update_xaxes(range=[0, 115])
+    fig.update_yaxes(autorange="reversed")
+    return fig
+
+

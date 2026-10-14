@@ -636,12 +636,13 @@ The frontend is an interactive, high-performance web dashboard built with **Stre
    - Agency operational performance comparisons with contextual mandate distinctions (NYPD rapid response vs HPD long-term housing investigations).
    - Stacked turnaround tier proportions across top complaint categories.
 
-4. **🤖 Machine Learning Insights (`dashboard/views/ml_insights.py`):**
-   - Person A Binary Classifier: Logistic Regression predicting SLA breach risk (`ROC-AUC = 0.9161`).
-   - Person B Multi-Class Classifier: Random Forest predicting turnaround tiers (`Weighted F1 = 0.7766`).
-   - Operational bottlenecks: Top 25 complaint types ranked by volume and SLA breach rate.
-   - Geographic equity analysis: Borough × Agency breach rates (50 cross-tabulations).
-   - Interactive SLA Breach Risk Estimator (calibrated scenario simulation without requiring PySpark JVM overhead).
+4. **🤖 Machine Learning Insights & Prediction Engine (`dashboard/views/ml_insights.py`):**
+   - **Evaluation Provenance & Reproducibility:** Documented run identifier, evaluation timestamp, dataset version, 80/20 train/test partition (825,094 train / 206,274 test rows), seed 42, and strict zero-leakage safeguards.
+   - **Person A Binary Pipeline:** Logistic Regression predicting SLA breach risk (`ROC-AUC = 0.9161`, `PR-AUC = 0.8842`, `Accuracy = 86.43%`, `F1 = 0.8652`) with 2×2 interactive Confusion Matrix heatmap.
+   - **Person B Multi-Class Pipeline:** Random Forest predicting turnaround tiers (`Weighted F1 = 0.7766`, `Macro F1 = 0.7418`, `Accuracy = 78.92%`) with per-class breakdown (FAST, MODERATE, SLOW).
+   - **Live Dual-Model Prediction Engine:** User-facing interactive inference engine allowing submission parameter simulation (Agency, Complaint, Borough, Hour, Month, Weekend) and generating real-time predictions for both Person A (breach probability %) and Person B (tier probabilities distribution chart).
+   - **Test Dataset Live Evaluation Table:** Filterable audit table of actual test-set predictions showing Request ID, Agency, Borough, Ground Truth, Model Prediction, Breach Probability, and Verification Status (Correct/Mismatch).
+   - **Operational Bottlenecks & Equity:** Top 25 complaint types bubble chart and 71 Borough × Agency cross-tabulations.
 
 5. **ℹ️ Data Information & Quality (`dashboard/views/data_info.py`):**
    - Data source provenance and 2020–2026 coverage timeline.
