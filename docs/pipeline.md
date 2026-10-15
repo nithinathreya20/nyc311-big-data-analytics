@@ -1,138 +1,92 @@
-# NYC 311 Big Data Pipeline
+# NYC 311 Big Data Analytics Pipeline
 
-## 1. Project Overview
+This document explains the project's end-to-end architecture, processing stages, data movement, model-training workflow, and dashboard generation. It is intended to help a new contributor understand and reproduce the pipeline.
 
-This project implements a large-scale data processing and predictive analytics pipeline using the **NYC 311 Service Requests from 2020 to Present** dataset.
+For field definitions and exact column order, see [`schema.md`](schema.md).
 
-The objective is to process millions of municipal service requests, perform historical analysis, and build a machine learning model to predict the expected resolution-time category of a service request.
+## 1. Project Scope
 
-### Research Question
+The project analyzes historical NYC 311 service requests to understand resolution patterns across time, boroughs, agencies, and complaint categories. It also trains machine-learning models to classify the observed resolution-duration category from selected request attributes.
 
-> Can large-scale machine learning predict the resolution-time category of NYC 311 service requests using request characteristics available at the time of submission?
+**Dataset:** [NYC 311 Service Requests from 2020 to Present](https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2020-to-Present/erm2-nwe9)  
+**Dataset ID:** `erm2-nwe9`  
+**Configured year range:** 2020–2026
 
-### Resolution-Time Categories
+### Resolution categories
 
-| Category | Resolution Time |
+| Category | Definition |
 |---|---|
-| FAST | < 24 hours |
-| MODERATE | 24–72 hours |
-| SLOW | > 72 hours |
+| `FAST` | Resolution in less than 24 hours |
+| `MODERATE` | Resolution from 24 to 72 hours, inclusive |
+| `SLOW` | Resolution in more than 72 hours |
 
----
+The categories are derived from `created_date` and `closed_date`. The analytical dataset contains service requests with valid closure information and describes their observed historical resolution outcomes.
 
-## 2. Data Source
-
-The project uses the **NYC 311 Service Requests from 2020 to Present** dataset published through NYC Open Data.
-
-Dataset API:
+## 2. Architecture Overview
 
 ```text
-https://data.cityofnewyork.us/resource/erm2-nwe9
-```
-
-The project processes data covering:
-
-```text
-2020
-2021
-2022
-2023
-2024
-2025
-2026
-```
-
-The dataset contains information about service requests such as:
-
-- Request creation date
-- Request closure date
-- Agency
-- Complaint type
-- Descriptor
-- Location information
-- Borough
-- Geographic coordinates
-- Status
-- Resolution information
-
----
-
-## 3. Technology Stack
-
-The project uses the following Big Data technologies:
-
-```text
-HDFS
-  ↓
+NYC Open Data
+    |
+    v
+Raw CSV files
+    |
+    v
+Hadoop HDFS
+/nyc311/raw/full/$YEAR/
+    |
+    v
 Apache Pig
-  ↓
-Apache Hive
-  ↓
-Apache Spark / Spark MLlib
+Cleaning, validation, deduplication,
+duration calculation and categorization
+    |
+    v
+Cleaned TSV data in HDFS
+/nyc311/cleaned_final/$YEAR/
+    |
+    +-----------------------------------+
+    |                                   |
+    v                                   v
+Apache Hive                         Local TSV transfer
+Partitioned data and analytics      data/nyc311_transfer/*.tsv
+    |                                   |
+    v                                   v
+Dashboard aggregates              Apache Spark MLlib
+/nyc311/dashboard/                 Feature engineering,
+    |                              model training and evaluation
+    |                                   |
+    v                                   v
+Local dashboard data               Saved model pipelines
+and visualizations                 and evaluation metrics
+    |                                   |
+    +----------------+------------------+
+                     |
+                     v
+             Streamlit Dashboard
 ```
 
-| Technology | Purpose |
-|---|---|
-| HDFS | Distributed storage of large datasets |
-| Apache Pig | Large-scale data cleaning and preprocessing |
-| Apache Hive | SQL-based historical analysis |
-| Apache Spark | Distributed feature engineering and machine learning |
-| Spark MLlib | Classification and model evaluation |
-| Git/GitHub | Source-code and documentation management |
+Hive and Spark process the cleaned dataset for complementary purposes. Hive produces descriptive analytics and dashboard aggregates, while Spark MLlib trains classification models. The Streamlit application brings the generated analytics, model metrics, and prediction functionality together.
 
----
+## 3. Main Data Locations
 
-## 4. Overall Pipeline
+| Stage | Location | Description |
+|---|---|---|
+| Raw data | `/nyc311/raw/full/$YEAR/*.csv` | Source CSV files in HDFS |
+| Cleaned data | `/nyc311/cleaned_final/$YEAR` | Headerless, tab-separated records |
+| Hive table | `nyc311.service_requests` | External table partitioned by year |
+| Hive aggregates | `/nyc311/dashboard/` | Aggregated datasets for dashboard visualizations |
+| Spark input | `data/nyc311_transfer/*.tsv` | Local copies of cleaned TSV data |
+| Binary model | `models/spark_model_binary/` | Saved binary Logistic Regression pipeline |
+| Multiclass model | `models/spark_model_multiclass/` | Saved multiclass Random Forest pipeline |
+| Model metrics | `models/dashboard_metrics.json` | Evaluation metrics and dashboard KPI metadata |
+| Dashboard | `app.py`, `dashboard/` | Streamlit application and supporting files |
 
-```text
-                    NYC Open Data
-                         │
-                         ▼
-                NYC 311 Raw Dataset
-                         │
-                         ▼
-                    HDFS Raw Data
-                         │
-                         ▼
-                 Apache Pig
-              Data Cleaning
-                         │
-                         ▼
-              Cleaned HDFS Data
-                    /2020
-                    /2021
-                    /2022
-                    /2023
-                    /2024
-                    /2025
-                    /2026
-                    │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-        Apache Hive            Apache Spark
-     Historical Analytics     Feature Engineering
-                                    │
-                                    ▼
-                               Spark MLlib
-                                    │
-                                    ▼
-                             Model Evaluation
-                                    │
-                                    ▼
-                              Final Dashboard
-```
+The cleaned TSV schema contains 29 fields. The Hive partition key `year` is stored as partition metadata and is not an additional field in each TSV record. See [`schema.md`](schema.md) for the complete schema.
 
----
+## 4. Stage 1: Acquire and Ingest Data
 
-## 5. HDFS Data Storage
+Download the required year-wise CSV files from NYC Open Data and upload them to HDFS using the project's directory convention.
 
-The raw NYC 311 data is stored in HDFS under:
-
-```text
-/nyc311/raw/full/
-```
-
-Year-wise raw data is organized as:
+Expected layout:
 
 ```text
 /nyc311/raw/full/2020/
@@ -144,537 +98,326 @@ Year-wise raw data is organized as:
 /nyc311/raw/full/2026/
 ```
 
-The raw data remains in HDFS and is used as the input to the Pig preprocessing stage.
+Verify that the source files are available:
 
----
-
-## 6. Apache Pig - Data Cleaning
-
-Apache Pig is used for large-scale preprocessing of the raw NYC 311 data.
-
-The final preprocessing script is:
-
-```text
-pig/clean_311_final.pig
+```bash
+hdfs dfs -ls /nyc311/raw/full
+hdfs dfs -ls /nyc311/raw/full/2020
 ```
 
-The script processes the data year by year.
+Use the intended source snapshot and year range consistently across the processing stages.
 
-### 6.1 Input
+## 5. Stage 2: Clean Data with Apache Pig
 
-Pig reads CSV files from:
+**Script:** `pig/clean_311_final.pig`
 
-```text
-/nyc311/raw/full/$YEAR/*.csv
-```
-
-where `$YEAR` represents the processing year.
-
-### 6.2 Header Removal
-
-CSV header records are removed before processing.
-
-This prevents column names from being interpreted as actual service-request records.
-
-### 6.3 Required Field Filtering
-
-Records are retained only when essential fields are available, including:
-
-- `unique_key`
-- `created_date`
-- `closed_date`
-- `agency`
-- `complaint_type`
-
-Records missing required information are removed.
-
-### 6.4 Duplicate Removal
-
-Records are deduplicated using:
+The Pig script processes the raw files for a specified year and writes cleaned records to the corresponding HDFS output directory.
 
 ```text
-unique_key
+Input:  /nyc311/raw/full/$YEAR/*.csv
+Output: /nyc311/cleaned_final/$YEAR
 ```
 
-The `unique_key` is treated as the identifier for a service request.
+### Processing steps
 
-### 6.5 Date Parsing
+1. Remove CSV header rows.
+2. Validate required identifiers, timestamps, agency, and complaint category.
+3. Deduplicate requests using `unique_key`.
+4. Parse supported timestamp formats.
+5. Validate that closure time is not earlier than creation time.
+6. Calculate `resolution_hours`.
+7. Retain durations from 2 minutes through 180 days, inclusive.
+8. Apply the configured NYC geographic bounds to latitude and longitude.
+9. Assign the `FAST`, `MODERATE`, or `SLOW` resolution category.
+10. Write a headerless, tab-separated output with 29 fields.
 
-The dataset contains different date formats across different years.
+Run the script for each year with available raw input:
 
-The preprocessing pipeline handles the relevant formats separately.
+```bash
+pig -x mapreduce -param YEAR=2020 pig/clean_311_final.pig
+```
 
-#### 2020–2021
+Repeat the command for each required year by changing the `YEAR` parameter. Confirm that the cleaned output was generated:
 
-Dates are processed from the ISO-style format:
+```bash
+hdfs dfs -ls /nyc311/cleaned_final/2020
+hdfs dfs -du -h /nyc311/cleaned_final/2020
+```
+
+## 6. Stage 3: Create the Hive Table and Partitions
+
+Hive provides SQL access to the cleaned data stored in HDFS.
+
+**Scripts:**
+- `hive/create_tables.hql`
+- `hive/add_partitions.hql`
+
+The table contract is:
 
 ```text
-YYYY-MM-DDTHH:MM:SS
+Database:     nyc311
+Table:        service_requests
+Location:     /nyc311/cleaned_final
+Storage:      Tab-delimited text
+Partition key: year INT
 ```
 
-#### 2022 onwards
+Run the table and partition scripts through Beeline:
 
-Dates are processed from the legacy format:
+```bash
+beeline -u 'jdbc:hive2://localhost:10000/default' \
+  -f hive/create_tables.hql
+
+beeline -u 'jdbc:hive2://localhost:10000/default' \
+  -f hive/add_partitions.hql
+```
+
+The partition script registers the configured year partitions. Confirm the table and partition coverage:
+
+```sql
+USE nyc311;
+SHOW PARTITIONS service_requests;
+
+SELECT year, COUNT(*)
+FROM service_requests
+GROUP BY year
+ORDER BY year;
+```
+
+## 7. Stage 4: Run Hive Analytics
+
+**Scripts:**
+- `hive/analytics.hql`
+- `hive/create_dashboard_data.hql`
+
+The analytics queries summarize request volume and resolution performance across several dimensions:
+
+- Yearly request volume
+- Resolution-category distribution
+- Average resolution duration by year
+- Borough-level performance
+- Agency-level performance
+- Most frequent complaint categories
+- Complaint category by resolution category
+- Monthly and hourly request patterns
+- Overall resolution-time statistics
+
+Run the analytical queries:
+
+```bash
+beeline -u 'jdbc:hive2://localhost:10000/default' \
+  -f hive/analytics.hql
+```
+
+### Generate dashboard aggregates
+
+The dashboard-export script writes aggregate datasets under `/nyc311/dashboard/` using Hive `INSERT OVERWRITE DIRECTORY`.
+
+| Output directory | Contents |
+|---|---|
+| `yearly_requests` | Request count by year |
+| `resolution_distribution` | Count and percentage by resolution category |
+| `yearly_resolution` | Average resolution hours by year |
+| `borough_performance` | Request volume, average duration, and resolution-category percentages by borough |
+| `top_complaints` | Top 15 complaint categories by volume |
+| `complaint_resolution` | Request count by complaint category and resolution category |
+| `agency_performance` | Request volume, average duration, and resolution-category percentages by agency |
+| `monthly_requests` | Request count by year and month |
+| `hourly_requests` | Request count by hour of day |
+| `resolution_stats` | Average, median, 90th-percentile, and 95th-percentile resolution hours |
+
+Generate the aggregate outputs:
+
+```bash
+beeline -u 'jdbc:hive2://localhost:10000/default' \
+  -f hive/create_dashboard_data.hql
+```
+
+These aggregates provide compact datasets for the dashboard without requiring every visualization to process the full row-level dataset.
+
+## 8. Stage 5: Prepare Spark Input Data
+
+The Spark training workflow reads local files matching:
 
 ```text
-MM/DD/YYYY HH:MM:SS AM/PM
+data/nyc311_transfer/*.tsv
 ```
 
-The parsed dates are used to calculate the resolution time.
+Transfer the cleaned TSV files from HDFS into this directory. Preserve the 29-field order and tab-delimited format.
 
----
+Before training, ensure that:
 
-## 7. Resolution-Time Calculation
+1. Each input file has no header row.
+2. Fields follow the cleaned schema defined in [`schema.md`](schema.md).
+3. `latitude`, `longitude`, and `resolution_hours` are represented as numeric values.
+4. The resolution category uses the labels `FAST`, `MODERATE`, and `SLOW`.
+5. The local data covers the intended years for the experiment.
 
-Resolution time is calculated from:
+The helper `spark/src/load_data.py` provides a single-year data-loading check. The multi-year training input is supplied through the configured local TSV transfer directory.
+
+## 9. Stage 6: Train and Evaluate Spark MLlib Models
+
+**Script:** `spark/src/train_models.py`
+
+The training script loads the local TSV dataset, applies its input filters, builds the feature vector, trains both classifiers, evaluates their performance, and saves the resulting pipelines and evaluation metadata.
+
+### Feature engineering
+
+| Feature | Transformation |
+|---|---|
+| Agency | String indexing and one-hot encoding |
+| Complaint category | Keep the top 30 categories, map the remaining categories to `OTHER`, then index and one-hot encode |
+| Borough | String indexing and one-hot encoding |
+| Hour | Derived from `created_date` |
+| Day of week | Derived from `created_date` |
+| Month | Derived from `created_date` |
+| Weekend | Binary feature derived from day of week |
+| Latitude | Numeric feature |
+| Longitude | Numeric feature |
+
+### Classification tasks
+
+| Task | Model | Target | Main metric |
+|---|---|---|---|
+| Binary classification | Logistic Regression | `SLOW` versus `FAST`/`MODERATE` | ROC-AUC |
+| Multiclass classification | Random Forest with 20 trees and maximum depth 8 | `FAST`, `MODERATE`, or `SLOW` | Weighted F1 |
+
+The current training configuration samples 5% of the available input using seed `42` and splits the sample into 80% training and 20% testing using seed `42`.
+
+The evaluation workflow also calculates supporting classification metrics, including accuracy, precision, and recall where applicable.
+
+Run training from the repository root:
+
+```bash
+python spark/src/train_models.py
+```
+
+The workflow saves the trained pipelines to:
 
 ```text
-closed_date - created_date
+models/spark_model_binary/
+models/spark_model_multiclass/
 ```
 
-The result is converted into hours.
-
-Conceptually:
+Evaluation and provenance information is written to:
 
 ```text
-resolution_hours =
-    (closed_date - created_date) / 3600
+models/dashboard_metrics.json
 ```
 
-The calculated value is stored in:
+The models classify resolution-duration categories derived from historical closure outcomes. Their evaluation metrics describe performance on the configured test split.
+
+## 10. Stage 7: Generate Dashboard KPIs and Model Metadata
+
+**Script:** `spark/src/export_dashboard_metrics.py`
+
+This script computes dashboard-oriented KPIs from the local cleaned TSV inputs and writes them to `models/dashboard_metrics.json`.
+
+The metrics include:
+- Total processed records
+- Resolution-category percentages
+- Median and 75th-percentile resolution duration
+- Borough and agency slow-resolution rates
+- High-volume complaint summaries
+- Model evaluation and provenance metadata used by the dashboard
+
+Run the exporter from the repository root:
+
+```bash
+python spark/src/export_dashboard_metrics.py
+```
+
+Run model training before exporting the final dashboard metrics so the metadata can include the latest evaluation results.
+
+## 11. Stage 8: Publish Dashboard Data and Launch Streamlit
+
+The dashboard entry point is `app.py`, with supporting pages, components, and utilities in `dashboard/`.
+
+Before launch:
+1. Export or copy the Hive aggregate outputs into the local dashboard data paths.
+2. Ensure `models/dashboard_metrics.json` contains the KPI and evaluation information for the current pipeline run.
+3. Ensure the saved model directories are available for any prediction functionality.
+4. Verify that the dashboard data files use the expected columns and formats.
+
+Launch the application:
+
+```bash
+streamlit run app.py
+```
+
+Open the local URL displayed in the terminal, typically:
 
 ```text
-resolution_hours
+http://localhost:8501
 ```
 
----
+The dashboard presents the generated analytics, resolution trends, borough and agency comparisons, complaint-category insights, and model evaluation information through an interactive interface.
 
-## 8. Temporal Outlier Filtering
+## 12. Validation and Reproduction Checklist
 
-Some service requests contain unrealistic or operationally problematic resolution durations.
+Use the following checklist to verify a complete run.
 
-The preprocessing pipeline applies the following operational boundary:
+### HDFS and Pig
+- [ ] Raw files are available for all intended years.
+- [ ] Pig completes successfully for each year.
+- [ ] Cleaned output exists for each processed year.
+- [ ] Cleaned rows follow the documented 29-field TSV schema.
+- [ ] Resolution durations and categories follow the documented rules.
 
-```text
-2 minutes ≤ resolution time ≤ 180 days
+### Hive
+- [ ] The `nyc311.service_requests` table exists.
+- [ ] Partitions match the processed year range.
+- [ ] Counts by year are available.
+- [ ] Analytics queries execute successfully.
+- [ ] All expected dashboard aggregate directories are generated.
+
+### Spark
+- [ ] Local TSV files follow the cleaned schema.
+- [ ] Both classification pipelines train successfully.
+- [ ] Model artifacts are saved.
+- [ ] Evaluation metrics and metadata are generated.
+
+### Dashboard
+- [ ] Hive aggregates have been exported to local dashboard paths.
+- [ ] KPI metadata is available.
+- [ ] Dashboard pages load successfully.
+- [ ] Visualizations and model-related views display the generated outputs.
+
+Run the automated tests from the repository root:
+
+```bash
+pytest -q
 ```
 
-In hours:
-
-```text
-0.033333 hours ≤ resolution_hours ≤ 4320 hours
-```
-
-Records outside this range are removed.
-
-This removes:
-
-- Near-instantaneous closures
-- Extremely long unresolved or abandoned-looking tickets
-
----
-
-## 9. Spatial Outlier Filtering
-
-Geographic coordinates are filtered to retain locations within a reasonable NYC boundary.
-
-The project uses:
-
-```text
-40.47 ≤ latitude ≤ 40.92
-```
-
-and:
-
-```text
--74.26 ≤ longitude ≤ -73.70
-```
-
-Invalid coordinates such as:
-
-```text
-latitude = 0
-longitude = 0
-```
-
-are therefore excluded by the geographic filtering.
-
----
-
-## 10. Resolution-Time Categorization
-
-After calculating `resolution_hours`, each service request is assigned a resolution category.
-
-```text
-FAST       → resolution_hours < 24
-MODERATE   → 24 ≤ resolution_hours ≤ 72
-SLOW       → resolution_hours > 72
-```
-
-These categories form the target variable for the classification model.
-
----
-
-## 11. Cleaned Data Output
-
-The final cleaned data is stored in HDFS under:
-
-```text
-/nyc311/cleaned_final/
-```
-
-with year-wise directories:
-
-```text
-/nyc311/cleaned_final/2020
-/nyc311/cleaned_final/2021
-/nyc311/cleaned_final/2022
-/nyc311/cleaned_final/2023
-/nyc311/cleaned_final/2024
-/nyc311/cleaned_final/2025
-/nyc311/cleaned_final/2026
-```
-
-The cleaned dataset contains **29 fields**.
-
-The complete schema is documented in:
-
-```text
-docs/schema.md
-```
-
----
-
-## 12. Cleaned Dataset Schema
-
-The final dataset contains:
-
-```text
-1.  unique_key
-2.  created_date
-3.  closed_date
-4.  agency
-5.  agency_name
-6.  complaint_type
-7.  descriptor
-8.  descriptor_2
-9.  location_type
-10. incident_zip
-11. incident_address
-12. street_name
-13. cross_street_1
-14. cross_street_2
-15. intersection_street_1
-16. intersection_street_2
-17. address_type
-18. city
-19. landmark
-20. facility_type
-21. status
-22. community_board
-23. council_district
-24. police_precinct
-25. borough
-26. latitude
-27. longitude
-28. resolution_hours
-29. resolution_category
-```
-
----
-
-## 13. Apache Hive - Historical Analytics
-
-Apache Hive is used for SQL-based analysis of the cleaned dataset.
-
-The Hive layer is responsible for generating historical and descriptive statistics before machine learning.
-
-Examples of analysis include:
-
-- Total service requests by year
-- Resolution category distribution
-- Average resolution time
-- Resolution time by borough
-- Complaint-type frequency
-- Agency-level request statistics
-- Year-over-year request trends
-- Distribution of FAST, MODERATE, and SLOW requests
-
-Hive operates on the cleaned data stored in HDFS.
-
----
-
-## 14. Apache Spark - Feature Engineering
-
-Apache Spark is used for distributed feature engineering and machine learning.
-
-Spark reads the cleaned dataset from:
-
-```text
-/nyc311/cleaned_final/
-```
-
-The feature engineering stage uses information available at the time a service request is created.
-
-Potential predictive features include:
-
-- Agency
-- Complaint type
-- Descriptor
-- Location type
-- Borough
-- Incident ZIP
-- Address type
-- Facility type
-- Created date
-- Created hour
-- Day of week
-- Month
-- Other request characteristics available at submission
-
----
-
-## 15. Data Leakage Prevention
-
-A major requirement of the machine learning pipeline is preventing information from the future from being used to predict the resolution category.
-
-The following fields are used to calculate the target but must **not** be used as predictive features:
-
-```text
-closed_date
-resolution_hours
-resolution_category
-```
-
-### Target
-
-```text
-resolution_category
-```
-
-### Features
-
-Features must be derived only from information available when the service request is submitted.
-
-This ensures that the model is predicting the resolution category rather than simply receiving information that already reveals the outcome.
-
----
-
-## 16. Spark MLlib - Machine Learning
-
-Spark MLlib is used to train and evaluate distributed classification models.
-
-The machine learning pipeline consists of:
-
-```text
-Cleaned Data
-     │
-     ▼
-Feature Engineering
-     │
-     ▼
-String Indexing
-     │
-     ▼
-One-Hot Encoding
-     │
-     ▼
-Feature Vector Assembly
-     │
-     ▼
-Train/Test Split
-     │
-     ▼
-Classification Model
-     │
-     ▼
-Predictions
-     │
-     ▼
-Evaluation
-```
-
-The primary prediction target is:
-
-```text
-resolution_category
-```
-
-with three classes:
-
-```text
-FAST
-MODERATE
-SLOW
-```
-
----
-
-## 17. Model Evaluation
-
-The machine learning models are evaluated using appropriate classification metrics.
-
-The evaluation stage may include:
-
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- Confusion matrix
-
-The evaluation results will be used to understand how effectively the model predicts different resolution-time categories.
-
----
-
-## 18. Data Sharing Between Team Members
-
-The cleaned dataset is large and is not stored in GitHub.
-
-The cleaned data is transferred separately between team members using external storage.
-
-The repository contains:
-
-- Source code
-- Pig scripts
-- Hive scripts
-- Spark source code
-- Configuration files
-- Documentation
-- Small sample datasets
-
-Large raw and processed datasets are excluded from Git using `.gitignore`.
-
----
-
-## 19. Team Responsibilities
-
-### Person 1
-
-Responsible for:
-
-- HDFS setup
-- Raw data storage
-- Apache Pig preprocessing
-- Data cleaning
-- Data validation
-- Apache Hive analytics
-- Pipeline documentation
-
-### Person 2
-
-Responsible for:
-
-- Apache Spark
-- Feature engineering
-- Spark MLlib
-- Model training
-- Model evaluation
-- Dashboard and visualization
-
-Both components use the same cleaned dataset produced by the Pig preprocessing stage.
-
----
-
-## 20. Final Architecture
-
-The final project architecture is:
-
-```text
-                         NYC Open Data
-                              │
-                              ▼
-                         Raw 311 Data
-                              │
-                              ▼
-                             HDFS
-                              │
-                              ▼
-                         Apache Pig
-                              │
-                  Data Cleaning & Filtering
-                              │
-                              ▼
-                     Cleaned 311 Data
-                              │
-                 ┌────────────┴────────────┐
-                 │                         │
-                 ▼                         ▼
-            Apache Hive              Apache Spark
-                 │                         │
-                 ▼                         ▼
-       Historical Analytics        Feature Engineering
-                                           │
-                                           ▼
-                                      Spark MLlib
-                                           │
-                                           ▼
-                                    Model Evaluation
-                                           │
-                                           ▼
-                                        Dashboard
-```
-
----
-
-## 21. Project Repository Structure
-
-```text
-nyc-311-project/
-│
-├── data/
-│   └── sample/
-│       ├── nyc311_sample.csv
-│       ├── nyc311_sample.json
-│       └── nyc311_sample_local.csv
-│
-├── docs/
-│   ├── pipeline.md
-│   └── schema.md
-│
-├── hive/
-│   ├── create_tables.hql
-│   └── analytics.hql
-│
-├── output/
-│
-├── pig/
-│   └── clean_311_final.pig
-│
-├── scripts/
-│
-├── spark/
-│   └── src/
-│
-├── config/
-│
-├── README.md
-└── .gitignore
-```
-
----
-
-## 22. Summary
-
-The project follows a distributed Big Data architecture in which each technology has a specific role:
-
-```text
-HDFS
-→ Distributed storage
-
-Pig
-→ Data cleaning and preprocessing
-
-Hive
-→ Historical SQL analytics
-
-Spark
-→ Distributed feature engineering
-
-Spark MLlib
-→ Machine learning and prediction
-
-Dashboard
-→ Visualization and presentation
-```
-
-The cleaned NYC 311 dataset produced by Apache Pig acts as the common input for both the Hive analytics layer and the Spark machine learning layer.
+## 13. End-to-End Execution Order
+
+For a reproducible run, execute the stages in this order:
+
+1. Download the required NYC 311 CSV files and upload them to HDFS.
+2. Run `pig/clean_311_final.pig` for each input year.
+3. Create the Hive table and register the processed year partitions.
+4. Run `hive/analytics.hql`.
+5. Generate aggregate outputs with `hive/create_dashboard_data.hql`.
+6. Transfer cleaned TSV files from HDFS to `data/nyc311_transfer/`.
+7. Train and evaluate the models with `spark/src/train_models.py`.
+8. Generate dashboard KPIs and metadata with `spark/src/export_dashboard_metrics.py`.
+9. Copy or export the Hive aggregates to the local dashboard data paths.
+10. Run `pytest -q`.
+11. Launch the application with `streamlit run app.py`.
+
+## 14. Implementation Reference
+
+| File | Responsibility |
+|---|---|
+| `pig/clean_311_final.pig` | Cleans raw records and writes the 29-field TSV dataset |
+| `hive/create_tables.hql` | Creates the external Hive table |
+| `hive/add_partitions.hql` | Registers year partitions |
+| `hive/analytics.hql` | Defines descriptive Hive analytics |
+| `hive/create_dashboard_data.hql` | Produces dashboard aggregate datasets |
+| `spark/src/load_data.py` | Provides a single-year Spark input-loading check |
+| `spark/src/load_all_years.py` | Multi-year loading utility location |
+| `spark/src/train_models.py` | Feature engineering, model training, evaluation, and model saving |
+| `spark/src/export_dashboard_metrics.py` | Computes dashboard KPIs and exports metrics metadata |
+| `app.py` | Streamlit application entry point |
+| `dashboard/` | Dashboard pages, components, utilities, and local data |
+| `docs/schema.md` | Detailed schema and data contracts |
