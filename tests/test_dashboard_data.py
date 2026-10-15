@@ -121,25 +121,49 @@ class TestDashboardData(unittest.TestCase):
         self.assertGreater(mean_h, median_h * 20)
 
     def test_dashboard_metrics_json(self):
+        """Structure and internal-consistency checks that stay valid after retraining."""
         payload = load_dashboard_metrics()
-        self.assertIn("model_eval", payload)
-        self.assertIn("person_a_roc_auc", payload["model_eval"])
-        self.assertIn("person_b_weighted_f1", payload["model_eval"])
-        self.assertEqual(payload["model_eval"]["person_a_roc_auc"], 0.9161)
-        self.assertEqual(payload["model_eval"]["person_b_weighted_f1"], 0.7766)
+        for key in ("model_eval", "provenance", "equity", "bottlenecks", "test_predictions_sample", "kpis"):
+            self.assertIn(key, payload)
         self.assertGreater(len(payload["equity"]), 0)
         self.assertGreater(len(payload["bottlenecks"]), 0)
-
-        # Provenance and reproducibility verification
-        self.assertIn("provenance", payload)
-        self.assertIn("evaluation_timestamp", payload["provenance"])
-        self.assertIn("dataset_version", payload["provenance"])
-        self.assertEqual(payload["provenance"]["train_records"], 825094)
-        self.assertEqual(payload["provenance"]["test_records"], 206274)
-
-        # Test prediction samples verification
-        self.assertIn("test_predictions_sample", payload)
         self.assertGreater(len(payload["test_predictions_sample"]), 0)
+
+        prov = payload["provenance"]
+        for key in ("evaluation_timestamp", "dataset_version", "train_records", "test_records", "sample_records"):
+            self.assertIn(key, prov)
+        # measured counts must add up
+        self.assertEqual(prov["train_records"] + prov["test_records"], prov["sample_records"])
+        self.assertLessEqual(prov["sample_records"], prov["dataset_total_records"])
+        self.assertEqual(prov.get("records_unparseable_created_date", 0), 0)
+
+        ev = payload["model_eval"]
+        a, b = ev["person_a"], ev["person_b"]
+        # headline scalars agree with the detailed blocks
+        self.assertEqual(ev["person_a_roc_auc"], a["metrics"]["roc_auc"])
+        self.assertEqual(ev["person_b_weighted_f1"], b["metrics"]["weighted_f1"])
+        for v in (a["metrics"]["roc_auc"], a["metrics"]["pr_auc"], a["metrics"]["accuracy"],
+                  b["metrics"]["weighted_f1"], b["metrics"]["macro_f1"], b["metrics"]["accuracy"]):
+            self.assertTrue(0.0 < v < 1.0)
+
+        # binary confusion matrix sums to the test size and reproduces accuracy
+        cm = a["confusion_matrix"]
+        n = cm["true_negatives"] + cm["false_positives"] + cm["false_negatives"] + cm["true_positives"]
+        self.assertEqual(n, prov["test_records"])
+        self.assertAlmostEqual((cm["true_negatives"] + cm["true_positives"]) / n, a["metrics"]["accuracy"], places=3)
+        # weighted recall equals accuracy by definition
+        self.assertAlmostEqual(a["metrics"]["weighted_recall"], a["metrics"]["accuracy"], places=3)
+
+        # multiclass: supports, matrix, macro and weighted F1 agree
+        classes = b["class_metrics"]
+        self.assertEqual(sum(c["support"] for c in classes), prov["test_records"])
+        matrix = b["confusion_matrix"]["matrix"]
+        self.assertEqual(sum(sum(r) for r in matrix), prov["test_records"])
+        self.assertAlmostEqual(sum(c["f1_score"] for c in classes) / len(classes), b["metrics"]["macro_f1"], places=3)
+        self.assertAlmostEqual(
+            sum(c["f1_score"] * c["support"] for c in classes) / prov["test_records"],
+            b["metrics"]["weighted_f1"], places=3)
+        self.assertAlmostEqual(b["metrics"]["weighted_recall"], b["metrics"]["accuracy"], places=3)
 
     def test_formatting_helpers(self):
         self.assertEqual(format_count(1_234_567), "1,234,567")

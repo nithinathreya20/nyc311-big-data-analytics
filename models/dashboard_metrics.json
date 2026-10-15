@@ -1,39 +1,58 @@
 {
   "provenance": {
-    "evaluation_run_id": "SPARK-EVAL-RUN-2026-FINAL",
-    "evaluation_timestamp": "2026-10-14T20:30:00Z",
-    "dataset_version": "NYC 311 Cleaned 2020-2026 (Pig Preprocessed, 29 Fields)",
-    "dataset_source": "HDFS /nyc311/cleaned_final/",
+    "evaluation_run_id": "SPARK-EVAL-20261015T100753Z",
+    "evaluation_timestamp": "2026-10-15T10:07:53.433171+00:00",
+    "dataset_version": "NYC 311 cleaned (Pig preprocessed, 29 fields)",
+    "dataset_source": "file:///home/nithin-athreya/nyc311_transfer/*.tsv",
     "dataset_total_records": 20627368,
+    "usable_records": 20627368,
+    "records_unparseable_created_date": 0,
+    "usable_records_by_year": {
+      "2020": 2638103,
+      "2021": 2915074,
+      "2022": 2859437,
+      "2023": 2942286,
+      "2024": 3195650,
+      "2025": 3421966,
+      "2026": 2654852
+    },
     "sample_fraction": 0.05,
-    "sample_records": 1031368,
+    "sampling_method": "simple random (Bernoulli) sample; not stratified",
+    "sample_records": 1031402,
+    "split": {
+      "type": "random",
+      "train": 0.8,
+      "test": 0.2,
+      "seed": 42
+    },
     "split_ratio": {
       "train": 0.8,
       "test": 0.2,
       "seed": 42
     },
-    "train_records": 825094,
-    "test_records": 206274,
+    "train_records": 824840,
+    "test_records": 206562,
     "random_seed": 42,
     "features_assembled": [
       "agency_vec (OneHotEncoded StringIndexer, handleInvalid=keep)",
-      "complaint_vec (Top 30 + OTHER, OneHotEncoded)",
+      "complaint_vec (top 30 of TRAINING rows + OTHER, OneHotEncoded)",
       "borough_vec (OneHotEncoded StringIndexer)",
-      "hour (Integer 0-23 derived from created_date)",
-      "day_of_week (Integer 1-7 derived from created_date)",
-      "month (Integer 1-12 derived from created_date)",
-      "is_weekend (Binary 1.0/0.0)",
-      "latitude (Double)",
-      "longitude (Double)"
+      "hour (0-23, from created_date)",
+      "day_of_week (1-7, from created_date)",
+      "month (1-12, from created_date)",
+      "is_weekend (1.0/0.0)",
+      "latitude",
+      "longitude"
     ],
     "data_leakage_safeguards": [
       "closed_date (excluded from feature pipeline)",
       "resolution_hours (excluded from feature pipeline)",
-      "resolution_category (used strictly as target labels; excluded from feature vector)"
+      "resolution_category (used only as target label)",
+      "complaint vocabulary computed from training rows only"
     ],
     "saved_artifacts": {
-      "person_a": "models/spark_model_binary",
-      "person_b": "models/spark_model_multiclass"
+      "binary": "models/spark_model_binary",
+      "multiclass": "models/spark_model_multiclass"
     }
   },
   "kpis": {
@@ -45,10 +64,10 @@
     "slow_pct": 26.97
   },
   "model_eval": {
-    "person_a_roc_auc": 0.9161,
-    "person_b_weighted_f1": 0.7766,
+    "person_a_roc_auc": 0.9285,
+    "person_b_weighted_f1": 0.7762,
     "person_a": {
-      "model_name": "Person A: Binary SLA Breach Classifier",
+      "model_name": "Binary SLA Breach Classifier",
       "algorithm": "LogisticRegression (Spark MLlib)",
       "target": "label_binary (1 if SLOW >72h else 0)",
       "hyperparameters": {
@@ -58,572 +77,611 @@
         "threshold": 0.5
       },
       "metrics": {
-        "roc_auc": 0.9161,
-        "pr_auc": 0.8842,
-        "accuracy": 0.8643,
-        "precision": 0.8587,
-        "recall": 0.8719,
-        "f1_score": 0.8652
+        "roc_auc": 0.9285,
+        "pr_auc": 0.7983,
+        "accuracy": 0.8605,
+        "precision": 0.7521,
+        "recall": 0.7168,
+        "f1_score": 0.734,
+        "weighted_precision": 0.8587,
+        "weighted_recall": 0.8605,
+        "weighted_f1": 0.8594
       },
       "confusion_matrix": {
-        "true_negatives": 142104,
-        "false_positives": 8512,
-        "false_negatives": 19478,
-        "true_positives": 36180,
-        "total_test_samples": 206274,
-        "tn_rate_pct": 68.89,
-        "fp_rate_pct": 4.13,
-        "fn_rate_pct": 9.44,
-        "tp_rate_pct": 17.54
+        "true_negatives": 137981,
+        "false_positives": 13105,
+        "false_negatives": 15711,
+        "true_positives": 39765,
+        "total_test_samples": 206562,
+        "tn_rate_pct": 66.8,
+        "fp_rate_pct": 6.34,
+        "fn_rate_pct": 7.61,
+        "tp_rate_pct": 19.25
       }
     },
     "person_b": {
-      "model_name": "Person B: Multi-Class Velocity Tier Classifier",
+      "model_name": "Multi-Class Resolution Tier Classifier",
       "algorithm": "RandomForestClassifier (Spark MLlib)",
-      "target": "label_multiclass (0: FAST <24h, 1: SLOW >72h, 2: MODERATE 24-72h)",
+      "target": "label_multiclass (0: FAST, 1: SLOW, 2: MODERATE)",
       "hyperparameters": {
         "numTrees": 20,
         "maxDepth": 8,
         "seed": 42
       },
       "metrics": {
-        "weighted_f1": 0.7766,
-        "macro_f1": 0.7418,
-        "accuracy": 0.7892,
-        "weighted_precision": 0.7824,
-        "weighted_recall": 0.7892
+        "weighted_f1": 0.7762,
+        "macro_f1": 0.6729,
+        "accuracy": 0.7866,
+        "weighted_precision": 0.7756,
+        "weighted_recall": 0.7866
       },
       "class_metrics": [
         {
           "class_name": "FAST (<24h)",
           "class_index": 0,
-          "precision": 0.8251,
-          "recall": 0.8842,
-          "f1_score": 0.8536,
-          "support": 121495,
-          "support_pct": 58.9
+          "precision": 0.8763,
+          "recall": 0.9016,
+          "f1_score": 0.8888,
+          "support": 121838,
+          "support_pct": 58.98
         },
         {
           "class_name": "MODERATE (24\u201372h)",
           "class_index": 2,
-          "precision": 0.6124,
-          "recall": 0.4418,
-          "f1_score": 0.5133,
-          "support": 29146,
-          "support_pct": 14.13
+          "precision": 0.5422,
+          "recall": 0.3242,
+          "f1_score": 0.4057,
+          "support": 29248,
+          "support_pct": 14.16
         },
         {
           "class_name": "SLOW (>72h)",
           "class_index": 1,
-          "precision": 0.7738,
-          "recall": 0.7621,
-          "f1_score": 0.7679,
-          "support": 55633,
-          "support_pct": 26.97
+          "precision": 0.6773,
+          "recall": 0.7781,
+          "f1_score": 0.7242,
+          "support": 55476,
+          "support_pct": 26.86
         }
-      ]
+      ],
+      "confusion_matrix": {
+        "labels": [
+          "FAST",
+          "MODERATE",
+          "SLOW"
+        ],
+        "matrix": [
+          [
+            109844,
+            4276,
+            7718
+          ],
+          [
+            6920,
+            9481,
+            12847
+          ],
+          [
+            8580,
+            3730,
+            43166
+          ]
+        ],
+        "note": "rows = actual, columns = predicted"
+      }
+    },
+    "baselines": {
+      "complaint_type_only": {
+        "description": "fitted on training rows; score = SLOW rate of complaint type, prediction = majority category",
+        "roc_auc": 0.8992,
+        "weighted_f1": 0.7719,
+        "macro_f1": 0.681,
+        "accuracy": 0.7694
+      },
+      "always_fast_accuracy": 0.5898,
+      "always_not_slow_accuracy": 0.7314
     }
   },
   "test_predictions_sample": [
     {
-      "id": "SR-2026-0814912",
-      "agency": "NYPD",
-      "complaint_type": "Illegal Parking",
-      "borough": "BROOKLYN",
-      "hour": 14,
-      "month": 5,
-      "is_weekend": 0,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.038,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
-      "tier_probabilities": {
-        "FAST": 0.942,
-        "MODERATE": 0.041,
-        "SLOW": 0.017
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0815104",
-      "agency": "NYPD",
-      "complaint_type": "Noise - Residential",
-      "borough": "MANHATTAN",
-      "hour": 23,
-      "month": 7,
-      "is_weekend": 1,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.045,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
-      "tier_probabilities": {
-        "FAST": 0.928,
-        "MODERATE": 0.051,
-        "SLOW": 0.021
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0816220",
-      "agency": "NYPD",
-      "complaint_type": "Blocked Driveway",
+      "id": "60632672",
+      "agency": "DOT",
+      "complaint_type": "Sidewalk Condition",
       "borough": "QUEENS",
-      "hour": 9,
+      "hour": 17,
       "month": 3,
       "is_weekend": 0,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.052,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
+      "actual_tier": "SLOW",
+      "actual_breach": 1,
+      "pred_breach_prob": 0.6752,
+      "pred_binary_decision": "SLA BREACH",
+      "pred_tier": "SLOW",
       "tier_probabilities": {
-        "FAST": 0.915,
-        "MODERATE": 0.058,
-        "SLOW": 0.027
+        "FAST": 0.2822,
+        "MODERATE": 0.1679,
+        "SLOW": 0.5499
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0817341",
+      "id": "60225474",
       "agency": "NYPD",
       "complaint_type": "Noise - Commercial",
       "borough": "BROOKLYN",
-      "hour": 22,
-      "month": 6,
+      "hour": 23,
+      "month": 2,
       "is_weekend": 1,
       "actual_tier": "FAST",
       "actual_breach": 0,
-      "pred_breach_prob": 0.041,
+      "pred_breach_prob": 0.0006,
       "pred_binary_decision": "SLA MET",
       "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.935,
-        "MODERATE": 0.046,
-        "SLOW": 0.019
+        "FAST": 0.8455,
+        "MODERATE": 0.0564,
+        "SLOW": 0.0981
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0818902",
+      "id": "62521918",
+      "agency": "HPD",
+      "complaint_type": "PAINT/PLASTER",
+      "borough": "BRONX",
+      "hour": 14,
+      "month": 9,
+      "is_weekend": 1,
+      "actual_tier": "SLOW",
+      "actual_breach": 1,
+      "pred_breach_prob": 0.8404,
+      "pred_binary_decision": "SLA BREACH",
+      "pred_tier": "SLOW",
+      "tier_probabilities": {
+        "FAST": 0.1503,
+        "MODERATE": 0.1718,
+        "SLOW": 0.6779
+      },
+      "is_correct": true
+    },
+    {
+      "id": "61360491",
+      "agency": "HPD",
+      "complaint_type": "PAINT/PLASTER",
+      "borough": "BROOKLYN",
+      "hour": 12,
+      "month": 6,
+      "is_weekend": 0,
+      "actual_tier": "SLOW",
+      "actual_breach": 1,
+      "pred_breach_prob": 0.7563,
+      "pred_binary_decision": "SLA BREACH",
+      "pred_tier": "SLOW",
+      "tier_probabilities": {
+        "FAST": 0.1433,
+        "MODERATE": 0.1748,
+        "SLOW": 0.6819
+      },
+      "is_correct": true
+    },
+    {
+      "id": "47201645",
       "agency": "NYPD",
       "complaint_type": "Illegal Parking",
-      "borough": "BRONX",
-      "hour": 18,
+      "borough": "QUEENS",
+      "hour": 0,
       "month": 8,
       "is_weekend": 0,
       "actual_tier": "FAST",
       "actual_breach": 0,
-      "pred_breach_prob": 0.049,
+      "pred_breach_prob": 0.0005,
       "pred_binary_decision": "SLA MET",
       "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.921,
-        "MODERATE": 0.054,
-        "SLOW": 0.025
+        "FAST": 0.9403,
+        "MODERATE": 0.0209,
+        "SLOW": 0.0387
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0820114",
-      "agency": "HPD",
-      "complaint_type": "UNSANITARY CONDITION",
-      "borough": "BRONX",
-      "hour": 11,
-      "month": 2,
-      "is_weekend": 0,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.892,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
-      "tier_probabilities": {
-        "FAST": 0.041,
-        "MODERATE": 0.098,
-        "SLOW": 0.861
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0821550",
-      "agency": "HPD",
-      "complaint_type": "HEAT/HOT WATER",
-      "borough": "MANHATTAN",
-      "hour": 8,
-      "month": 1,
+      "id": "58484861",
+      "agency": "NYPD",
+      "complaint_type": "Illegal Parking",
+      "borough": "QUEENS",
+      "hour": 9,
+      "month": 8,
       "is_weekend": 0,
       "actual_tier": "FAST",
       "actual_breach": 0,
-      "pred_breach_prob": 0.285,
+      "pred_breach_prob": 0.0006,
       "pred_binary_decision": "SLA MET",
       "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.672,
-        "MODERATE": 0.185,
-        "SLOW": 0.143
+        "FAST": 0.9403,
+        "MODERATE": 0.0209,
+        "SLOW": 0.0387
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0822671",
-      "agency": "HPD",
-      "complaint_type": "PAINT/PLASTER",
-      "borough": "BROOKLYN",
-      "hour": 15,
-      "month": 4,
+      "id": "60459915",
+      "agency": "NYPD",
+      "complaint_type": "Noise - Residential",
+      "borough": "BRONX",
+      "hour": 12,
+      "month": 3,
       "is_weekend": 0,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.841,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0118,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.062,
-        "MODERATE": 0.134,
-        "SLOW": 0.804
+        "FAST": 0.896,
+        "MODERATE": 0.0387,
+        "SLOW": 0.0653
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0823908",
-      "agency": "HPD",
-      "complaint_type": "PLUMBING",
-      "borough": "QUEENS",
-      "hour": 10,
+      "id": "55291940",
+      "agency": "NYPD",
+      "complaint_type": "Noise - Street/Sidewalk",
+      "borough": "BROOKLYN",
+      "hour": 22,
       "month": 9,
       "is_weekend": 0,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.826,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0005,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.071,
-        "MODERATE": 0.142,
-        "SLOW": 0.787
+        "FAST": 0.9584,
+        "MODERATE": 0.0154,
+        "SLOW": 0.0262
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0824125",
-      "agency": "HPD",
-      "complaint_type": "DOOR/WINDOW",
-      "borough": "BRONX",
-      "hour": 16,
-      "month": 11,
-      "is_weekend": 1,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.914,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
-      "tier_probabilities": {
-        "FAST": 0.032,
-        "MODERATE": 0.081,
-        "SLOW": 0.887
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0825310",
-      "agency": "HPD",
-      "complaint_type": "WATER LEAK",
-      "borough": "BROOKLYN",
+      "id": "52196104",
+      "agency": "NYPD",
+      "complaint_type": "Illegal Parking",
+      "borough": "MANHATTAN",
       "hour": 12,
       "month": 10,
       "is_weekend": 0,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.798,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
-      "tier_probabilities": {
-        "FAST": 0.085,
-        "MODERATE": 0.158,
-        "SLOW": 0.757
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0826442",
-      "agency": "DOT",
-      "complaint_type": "Street Condition",
-      "borough": "QUEENS",
-      "hour": 13,
-      "month": 3,
-      "is_weekend": 0,
-      "actual_tier": "MODERATE",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.442,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "MODERATE",
-      "tier_probabilities": {
-        "FAST": 0.284,
-        "MODERATE": 0.468,
-        "SLOW": 0.248
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0827891",
-      "agency": "DOT",
-      "complaint_type": "Traffic Signal Condition",
-      "borough": "MANHATTAN",
-      "hour": 17,
-      "month": 6,
-      "is_weekend": 0,
       "actual_tier": "FAST",
       "actual_breach": 0,
-      "pred_breach_prob": 0.125,
+      "pred_breach_prob": 0.0005,
       "pred_binary_decision": "SLA MET",
       "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.812,
-        "MODERATE": 0.126,
-        "SLOW": 0.062
+        "FAST": 0.9405,
+        "MODERATE": 0.0209,
+        "SLOW": 0.0386
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0828330",
-      "agency": "DOT",
-      "complaint_type": "Street Light Condition",
-      "borough": "STATEN ISLAND",
-      "hour": 20,
-      "month": 12,
+      "id": "63035239",
+      "agency": "NYPD",
+      "complaint_type": "Abandoned Vehicle",
+      "borough": "BROOKLYN",
+      "hour": 19,
+      "month": 11,
       "is_weekend": 1,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0012,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.8513,
+        "MODERATE": 0.0534,
+        "SLOW": 0.0953
+      },
+      "is_correct": true
+    },
+    {
+      "id": "54174810",
+      "agency": "NYPD",
+      "complaint_type": "Noise - Residential",
+      "borough": "MANHATTAN",
+      "hour": 21,
+      "month": 5,
+      "is_weekend": 1,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0072,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.9206,
+        "MODERATE": 0.0324,
+        "SLOW": 0.047
+      },
+      "is_correct": true
+    },
+    {
+      "id": "53382991",
+      "agency": "HPD",
+      "complaint_type": "HEAT/HOT WATER",
+      "borough": "BROOKLYN",
+      "hour": 10,
+      "month": 2,
+      "is_weekend": 0,
+      "actual_tier": "MODERATE",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.2021,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "MODERATE",
+      "tier_probabilities": {
+        "FAST": 0.2679,
+        "MODERATE": 0.4354,
+        "SLOW": 0.2967
+      },
+      "is_correct": true
+    },
+    {
+      "id": "62476543",
+      "agency": "NYPD",
+      "complaint_type": "Abandoned Vehicle",
+      "borough": "QUEENS",
+      "hour": 9,
+      "month": 9,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0008,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.8264,
+        "MODERATE": 0.0607,
+        "SLOW": 0.1129
+      },
+      "is_correct": true
+    },
+    {
+      "id": "45793334",
+      "agency": "DHS",
+      "complaint_type": "Homeless Person Assistance",
+      "borough": "MANHATTAN",
+      "hour": 7,
+      "month": 3,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0622,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.648,
+        "MODERATE": 0.1223,
+        "SLOW": 0.2296
+      },
+      "is_correct": true
+    },
+    {
+      "id": "51148374",
+      "agency": "DSNY",
+      "complaint_type": "Request Large Bulky Item Collection",
+      "borough": "QUEENS",
+      "hour": 15,
+      "month": 7,
+      "is_weekend": 0,
       "actual_tier": "SLOW",
       "actual_breach": 1,
-      "pred_breach_prob": 0.684,
+      "pred_breach_prob": 0.5338,
       "pred_binary_decision": "SLA BREACH",
       "pred_tier": "SLOW",
       "tier_probabilities": {
-        "FAST": 0.118,
-        "MODERATE": 0.248,
-        "SLOW": 0.634
+        "FAST": 0.1193,
+        "MODERATE": 0.3963,
+        "SLOW": 0.4844
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0829107",
-      "agency": "DOT",
-      "complaint_type": "Sidewalk Condition",
-      "borough": "BROOKLYN",
-      "hour": 11,
+      "id": "67054027",
+      "agency": "HPD",
+      "complaint_type": "APPLIANCE",
+      "borough": "BRONX",
+      "hour": 15,
+      "month": 12,
+      "is_weekend": 0,
+      "actual_tier": "SLOW",
+      "actual_breach": 1,
+      "pred_breach_prob": 0.878,
+      "pred_binary_decision": "SLA BREACH",
+      "pred_tier": "SLOW",
+      "tier_probabilities": {
+        "FAST": 0.1897,
+        "MODERATE": 0.1776,
+        "SLOW": 0.6327
+      },
+      "is_correct": true
+    },
+    {
+      "id": "64589946",
+      "agency": "NYPD",
+      "complaint_type": "Blocked Driveway",
+      "borough": "QUEENS",
+      "hour": 22,
+      "month": 4,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0004,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.8847,
+        "MODERATE": 0.0415,
+        "SLOW": 0.0738
+      },
+      "is_correct": true
+    },
+    {
+      "id": "51694322",
+      "agency": "DHS",
+      "complaint_type": "Homeless Person Assistance",
+      "borough": "MANHATTAN",
+      "hour": 23,
+      "month": 8,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0587,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.7097,
+        "MODERATE": 0.1034,
+        "SLOW": 0.187
+      },
+      "is_correct": true
+    },
+    {
+      "id": "60016766",
+      "agency": "NYPD",
+      "complaint_type": "Non-Emergency Police Matter",
+      "borough": "QUEENS",
+      "hour": 17,
+      "month": 1,
+      "is_weekend": 1,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0007,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.8272,
+        "MODERATE": 0.0617,
+        "SLOW": 0.1112
+      },
+      "is_correct": true
+    },
+    {
+      "id": "57334077",
+      "agency": "HPD",
+      "complaint_type": "FLOORING/STAIRS",
+      "borough": "BRONX",
+      "hour": 12,
+      "month": 4,
+      "is_weekend": 1,
+      "actual_tier": "MODERATE",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.8172,
+      "pred_binary_decision": "SLA BREACH",
+      "pred_tier": "SLOW",
+      "tier_probabilities": {
+        "FAST": 0.191,
+        "MODERATE": 0.1747,
+        "SLOW": 0.6343
+      },
+      "is_correct": false
+    },
+    {
+      "id": "67934443",
+      "agency": "NYPD",
+      "complaint_type": "Illegal Parking",
+      "borough": "QUEENS",
+      "hour": 2,
+      "month": 2,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0004,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.9403,
+        "MODERATE": 0.0209,
+        "SLOW": 0.0387
+      },
+      "is_correct": true
+    },
+    {
+      "id": "50493232",
+      "agency": "DPR",
+      "complaint_type": "Dead/Dying Tree",
+      "borough": "QUEENS",
+      "hour": 19,
       "month": 5,
       "is_weekend": 0,
       "actual_tier": "SLOW",
       "actual_breach": 1,
-      "pred_breach_prob": 0.772,
+      "pred_breach_prob": 0.641,
       "pred_binary_decision": "SLA BREACH",
       "pred_tier": "SLOW",
       "tier_probabilities": {
-        "FAST": 0.089,
-        "MODERATE": 0.185,
-        "SLOW": 0.726
+        "FAST": 0.3178,
+        "MODERATE": 0.1692,
+        "SLOW": 0.513
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0830456",
-      "agency": "DSNY",
-      "complaint_type": "Illegal Dumping",
+      "id": "65738297",
+      "agency": "NYPD",
+      "complaint_type": "Noise - Residential",
       "borough": "BRONX",
-      "hour": 7,
-      "month": 4,
-      "is_weekend": 0,
-      "actual_tier": "MODERATE",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.381,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "MODERATE",
-      "tier_probabilities": {
-        "FAST": 0.342,
-        "MODERATE": 0.448,
-        "SLOW": 0.21
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0831201",
-      "agency": "DSNY",
-      "complaint_type": "Dirty Conditions",
-      "borough": "MANHATTAN",
-      "hour": 14,
-      "month": 7,
-      "is_weekend": 0,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.215,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
-      "tier_probabilities": {
-        "FAST": 0.694,
-        "MODERATE": 0.198,
-        "SLOW": 0.108
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0832870",
-      "agency": "DSNY",
-      "complaint_type": "Derelict Vehicles",
-      "borough": "QUEENS",
-      "hour": 16,
+      "hour": 13,
       "month": 8,
       "is_weekend": 1,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.712,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0156,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
       "tier_probabilities": {
-        "FAST": 0.104,
-        "MODERATE": 0.228,
-        "SLOW": 0.668
+        "FAST": 0.9028,
+        "MODERATE": 0.0374,
+        "SLOW": 0.0598
       },
       "is_correct": true
     },
     {
-      "id": "SR-2026-0833910",
-      "agency": "DEP",
-      "complaint_type": "Water System",
+      "id": "70065701",
+      "agency": "NYPD",
+      "complaint_type": "Noise - Street/Sidewalk",
       "borough": "BROOKLYN",
-      "hour": 10,
+      "hour": 20,
+      "month": 8,
+      "is_weekend": 0,
+      "actual_tier": "FAST",
+      "actual_breach": 0,
+      "pred_breach_prob": 0.0005,
+      "pred_binary_decision": "SLA MET",
+      "pred_tier": "FAST",
+      "tier_probabilities": {
+        "FAST": 0.9579,
+        "MODERATE": 0.0157,
+        "SLOW": 0.0264
+      },
+      "is_correct": true
+    },
+    {
+      "id": "67908402",
+      "agency": "HPD",
+      "complaint_type": "WATER LEAK",
+      "borough": "BRONX",
+      "hour": 2,
       "month": 2,
       "is_weekend": 0,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.231,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
-      "tier_probabilities": {
-        "FAST": 0.721,
-        "MODERATE": 0.174,
-        "SLOW": 0.105
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0834552",
-      "agency": "DEP",
-      "complaint_type": "Sewer",
-      "borough": "QUEENS",
-      "hour": 8,
-      "month": 9,
-      "is_weekend": 0,
-      "actual_tier": "MODERATE",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.365,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "MODERATE",
-      "tier_probabilities": {
-        "FAST": 0.385,
-        "MODERATE": 0.432,
-        "SLOW": 0.183
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0835418",
-      "agency": "DPR",
-      "complaint_type": "Damaged Tree",
-      "borough": "STATEN ISLAND",
-      "hour": 15,
-      "month": 10,
-      "is_weekend": 0,
       "actual_tier": "SLOW",
       "actual_breach": 1,
-      "pred_breach_prob": 0.764,
+      "pred_breach_prob": 0.8291,
       "pred_binary_decision": "SLA BREACH",
       "pred_tier": "SLOW",
       "tier_probabilities": {
-        "FAST": 0.088,
-        "MODERATE": 0.198,
-        "SLOW": 0.714
+        "FAST": 0.1655,
+        "MODERATE": 0.1566,
+        "SLOW": 0.6779
       },
       "is_correct": true
-    },
-    {
-      "id": "SR-2026-0836991",
-      "agency": "DOB",
-      "complaint_type": "General Construction/Plumbing",
-      "borough": "BROOKLYN",
-      "hour": 13,
-      "month": 6,
-      "is_weekend": 0,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.815,
-      "pred_binary_decision": "SLA BREACH",
-      "pred_tier": "SLOW",
-      "tier_probabilities": {
-        "FAST": 0.072,
-        "MODERATE": 0.154,
-        "SLOW": 0.774
-      },
-      "is_correct": true
-    },
-    {
-      "id": "SR-2026-0837120",
-      "agency": "DOT",
-      "complaint_type": "Street Condition",
-      "borough": "MANHATTAN",
-      "hour": 3,
-      "month": 1,
-      "is_weekend": 1,
-      "actual_tier": "SLOW",
-      "actual_breach": 1,
-      "pred_breach_prob": 0.485,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "MODERATE",
-      "tier_probabilities": {
-        "FAST": 0.245,
-        "MODERATE": 0.425,
-        "SLOW": 0.33
-      },
-      "is_correct": false
-    },
-    {
-      "id": "SR-2026-0838445",
-      "agency": "DSNY",
-      "complaint_type": "Missed Collection",
-      "borough": "QUEENS",
-      "hour": 12,
-      "month": 7,
-      "is_weekend": 0,
-      "actual_tier": "FAST",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.342,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "MODERATE",
-      "tier_probabilities": {
-        "FAST": 0.41,
-        "MODERATE": 0.445,
-        "SLOW": 0.145
-      },
-      "is_correct": false
-    },
-    {
-      "id": "SR-2026-0839812",
-      "agency": "HPD",
-      "complaint_type": "HEAT/HOT WATER",
-      "borough": "BRONX",
-      "hour": 9,
-      "month": 11,
-      "is_weekend": 1,
-      "actual_tier": "MODERATE",
-      "actual_breach": 0,
-      "pred_breach_prob": 0.38,
-      "pred_binary_decision": "SLA MET",
-      "pred_tier": "FAST",
-      "tier_probabilities": {
-        "FAST": 0.512,
-        "MODERATE": 0.342,
-        "SLOW": 0.146
-      },
-      "is_correct": false
     }
   ],
   "equity": [
