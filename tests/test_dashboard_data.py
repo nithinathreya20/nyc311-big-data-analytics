@@ -38,6 +38,7 @@ from dashboard.components.charts import (
     create_resolution_skew_comparison,
     create_bottlenecks_bubble_chart,
     create_confusion_matrix_heatmap,
+    create_multiclass_confusion_matrix_heatmap,
     create_tier_probability_bar,
 )
 
@@ -210,6 +211,10 @@ class TestDashboardData(unittest.TestCase):
 
         fig_prob = create_tier_probability_bar({"FAST": 0.85, "MODERATE": 0.10, "SLOW": 0.05})
         self.assertIsNotNone(fig_prob)
+
+        b_cm_data = metrics.get("model_eval", {}).get("person_b", {}).get("confusion_matrix", {})
+        fig_b_cm = create_multiclass_confusion_matrix_heatmap(b_cm_data)
+        self.assertIsNotNone(fig_b_cm)
 
 
 if __name__ == "__main__":

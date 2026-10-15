@@ -685,13 +685,57 @@ def create_confusion_matrix_heatmap(cm_data: dict) -> go.Figure:
 
     fig = _apply_standard_layout(
         fig,
-        title="Person A Binary Confusion Matrix (Test Split: N=206,274)",
+        title=f"Person A Binary Confusion Matrix (Test Split: N={total:,})",
         height=320,
         showlegend=False,
     )
     fig.update_xaxes(side="top", tickfont={"size": 12, "family": FONT_FAMILY})
     fig.update_yaxes(autorange="reversed", tickfont={"size": 12, "family": FONT_FAMILY})
     return fig
+
+
+def create_multiclass_confusion_matrix_heatmap(cm_data: dict) -> go.Figure:
+    """Create an interactive 3x3 heatmap for Person B Multi-Class Velocity Tier Classifier."""
+    labels = cm_data.get("labels", ["FAST", "MODERATE", "SLOW"])
+    matrix = cm_data.get("matrix", [[109844, 4276, 7718], [6920, 9481, 12847], [8580, 3730, 43166]])
+    total = sum(sum(row) for row in matrix) or 1
+
+    axis_labels = ["FAST (<24h)", "MODERATE (24–72h)", "SLOW (>72h)"]
+
+    text_vals = []
+    for i, row in enumerate(matrix):
+        row_text = []
+        row_sum = sum(row) or 1
+        for j, val in enumerate(row):
+            pct_row = val / row_sum * 100
+            match_mark = " ✓" if i == j else ""
+            row_text.append(f"<b>{val:,}</b>{match_mark}<br>({pct_row:.1f}% of actual)")
+        text_vals.append(row_text)
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=matrix,
+            x=[f"Pred: {lbl}" for lbl in axis_labels],
+            y=[f"Actual: {lbl}" for lbl in axis_labels],
+            text=text_vals,
+            texttemplate="%{text}",
+            textfont={"size": 12, "family": FONT_FAMILY, "color": "#0F172A"},
+            colorscale=[[0, "#F8FAFC"], [0.15, "#E0F2FE"], [0.5, "#7DD3FC"], [1.0, "#0284C7"]],
+            showscale=False,
+            hoverongaps=False,
+        )
+    )
+
+    fig = _apply_standard_layout(
+        fig,
+        title=f"Person B 3×3 Resolution Tier Confusion Matrix (Test Split: N={total:,})",
+        height=350,
+        showlegend=False,
+    )
+    fig.update_xaxes(side="top", tickfont={"size": 11, "family": FONT_FAMILY})
+    fig.update_yaxes(autorange="reversed", tickfont={"size": 11, "family": FONT_FAMILY})
+    return fig
+
 
 
 def create_tier_probability_bar(tier_probs: dict) -> go.Figure:

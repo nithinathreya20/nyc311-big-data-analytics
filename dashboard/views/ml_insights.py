@@ -19,6 +19,7 @@ from dashboard.components.kpis import render_kpi_card
 from dashboard.components.charts import (
     create_bottlenecks_bubble_chart,
     create_confusion_matrix_heatmap,
+    create_multiclass_confusion_matrix_heatmap,
     create_tier_probability_bar,
 )
 from dashboard.utils.data_loader import load_dashboard_metrics
@@ -56,13 +57,14 @@ def render_ml_insights_view() -> None:
     # =========================================================================
     # SECTION 0: MODEL PROVENANCE & REPRODUCIBILITY CARD (Reviewer Priority)
     # =========================================================================
-    eval_ts = provenance.get("evaluation_timestamp", "2026-10-14T20:30:00Z")
-    run_id = provenance.get("evaluation_run_id", "SPARK-EVAL-RUN-2026-FINAL")
-    sample_recs = provenance.get("sample_records", 1031368)
-    train_recs = provenance.get("train_records", 825094)
-    test_recs = provenance.get("test_records", 206274)
+    eval_ts = provenance.get("evaluation_timestamp", "2026-10-15T10:07:53Z")
+    run_id = provenance.get("evaluation_run_id", "SPARK-EVAL-RUN")
+    sample_recs = provenance.get("sample_records", 1031402)
+    train_recs = provenance.get("train_records", 824840)
+    test_recs = provenance.get("test_records", 206562)
     seed = provenance.get("random_seed", 42)
-    dataset_ver = provenance.get("dataset_version", "NYC 311 Cleaned 2020-2026 (Pig Preprocessed, 29 Fields)")
+    dataset_ver = provenance.get("dataset_version", "NYC 311 cleaned (Pig preprocessed, 29 fields)")
+    sampling_method = provenance.get("sampling_method", "Random Bernoulli Sample")
 
     st.markdown(
         f"""
@@ -93,7 +95,7 @@ def render_ml_insights_view() -> None:
                     <strong style="color: #F8FAFC;">80% Train ({train_recs:,}) / 20% Test ({test_recs:,})</strong>
                 </div>
                 <div>
-                    <span style="color: #94A3B8; display: block; font-size: 0.75rem; text-transform: uppercase;">Stratified Sample:</span>
+                    <span style="color: #94A3B8; display: block; font-size: 0.75rem; text-transform: uppercase;">Sample Scope & Method:</span>
                     <strong style="color: #F8FAFC;">5.0% ({sample_recs:,} records, Seed={seed})</strong>
                 </div>
                 <div>
@@ -110,12 +112,12 @@ def render_ml_insights_view() -> None:
     # SECTION 1: DETAILED DUAL-PIPELINE EVALUATION METRICS
     # =========================================================================
     st.markdown(
-        """
+        f"""
         <h3 style="color: #38BDF8; font-size: 1.3rem; font-weight: 700; margin-bottom: 4px;">
             1. Dual MLlib Pipeline Evaluation & Benchmark Metrics
         </h3>
         <p style="color: #CBD5E1; font-size: 0.9rem; margin-top: 0; margin-bottom: 14px;">
-            Evaluation scores calculated directly from the independent 20% test split (N = 206,274 records) against ground truth labels.
+            Evaluation scores calculated directly from the independent 20% test split (N = {test_recs:,} records) against ground truth labels.
         </p>
         """,
         unsafe_allow_html=True,
@@ -210,6 +212,37 @@ def render_ml_insights_view() -> None:
                 use_container_width=True,
                 hide_index=True,
             )
+
+        pb_cm = person_b_data.get("confusion_matrix", {})
+        if pb_cm and "matrix" in pb_cm:
+            st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+            st.plotly_chart(create_multiclass_confusion_matrix_heatmap(pb_cm), use_container_width=True, config={"displayModeBar": False})
+
+    # Heuristic baselines lift comparison
+    baselines = eval_metrics.get("baselines", {})
+    if baselines:
+        st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+        with st.expander("📊 Benchmark Lift: ML Models vs Heuristic Baselines", expanded=False):
+            ct_base = baselines.get("complaint_type_only", {})
+            b_col1, b_col2, b_col3 = st.columns(3)
+            with b_col1:
+                st.metric(
+                    label="Person A ROC-AUC vs Heuristic",
+                    value=f"{pa_roc_auc:.4f}",
+                    delta=f"{(pa_roc_auc - ct_base.get('roc_auc', 0.8992))*100:+.2f}% vs Complaint-Type Baseline",
+                )
+            with b_col2:
+                st.metric(
+                    label="Person A Accuracy vs Majority Baseline",
+                    value=f"{pa_acc*100:.2f}%",
+                    delta=f"{(pa_acc - baselines.get('always_not_slow_accuracy', 0.7314))*100:+.2f}% vs 'Always Not Slow' (73.14%)",
+                )
+            with b_col3:
+                st.metric(
+                    label="Person B Accuracy vs Majority Baseline",
+                    value=f"{pb_acc*100:.2f}%",
+                    delta=f"{(pb_acc - baselines.get('always_fast_accuracy', 0.5898))*100:+.2f}% vs 'Always Fast' (58.98%)",
+                )
 
     st.markdown("<hr style='border: none; border-top: 1px solid #334155; margin: 28px 0;'>", unsafe_allow_html=True)
 
